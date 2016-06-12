@@ -24,7 +24,7 @@ classdef AcquisitionHeader < handle
         slice_dir = single([]);                        % Directional cosines of the slice %
         patient_table_position = single([]);           % Patient table off-center %
         idx = struct(  ...                             % Encoding loop counters, see above %
-            'kspace_encode_step_1', uint16([]), ...   
+            'kspace_encode_step_1', uint16([]), ...
             'kspace_encode_step_2', uint16([]), ...
             'average', uint16([]), ...
             'slice', uint16([]), ...
@@ -119,7 +119,7 @@ classdef AcquisitionHeader < handle
             nacq = length(obj.version);
             
         end
-
+        
         function hdr = select(obj, range)
             % Return a copy of a range of acquisition headers
             
@@ -162,7 +162,7 @@ classdef AcquisitionHeader < handle
             hdr.user_int = obj.user_int(:,range);
             hdr.user_float = obj.user_float(:,range);
             
-        end        
+        end
         
         function extend(obj,N)
             % Extend with blank header
@@ -241,9 +241,9 @@ classdef AcquisitionHeader < handle
             obj.idx.segment(1,Nrange) = hdr.idx.segment(:);
             obj.idx.user(:,Nrange) = hdr.idx.user(:);
             obj.user_int(:,Nrange) = hdr.user_int(:);
-            obj.user_float(:,Nrange) = hdr.user_float(:);            
+            obj.user_float(:,Nrange) = hdr.user_float(:);
         end
-
+        
         function fromStruct(obj, hdr)
             % Convert a struct to the object
             N = length(hdr.version);
@@ -280,9 +280,9 @@ classdef AcquisitionHeader < handle
             obj.idx.segment = reshape(hdr.idx.segment,[1,N]);
             obj.idx.user = reshape(hdr.idx.user,[8,N]);
             obj.user_int = reshape(hdr.user_int,[8,N]);
-            obj.user_float = reshape(hdr.user_float,[8,N]);         
+            obj.user_float = reshape(hdr.user_float,[8,N]);
         end
-
+        
         function hdr = toStruct(obj)
             % Convert the object to a plain struct
             
@@ -320,58 +320,57 @@ classdef AcquisitionHeader < handle
             hdr.idx.segment = obj.idx.segment;
             hdr.idx.user = obj.idx.user;
             hdr.user_int = obj.user_int;
-            hdr.user_float = obj.user_float;            
+            hdr.user_float = obj.user_float;
         end
         
         function fromBytes(obj, bytearray)
             % Convert from a byte array to an ISMRMRD AcquisitionHeader
             % This conforms to the memory layout of the C-struct
-
+            
             if size(bytearray,1) ~= 340
                 error('Wrong number of bytes for AcquisitionHeader.')
             end
             N = size(bytearray,2);
-            for p = 1:N
-                obj.version(p) =                  typecast(bytearray(  1:  2,p), 'uint16'); ... % First unsigned int indicates the version %
-                obj.flags(p) =                    typecast(bytearray(  3: 10,p), 'uint64'); ... % bit field with flags %
-                obj.measurement_uid(p) =          typecast(bytearray( 11: 14,p), 'uint32'); ... % Unique ID for the measurement %
-                obj.scan_counter(p) =             typecast(bytearray( 15: 18,p), 'uint32'); ... % Current acquisition number in the measurement %
-                obj.acquisition_time_stamp(p) =   typecast(bytearray( 19: 22,p), 'uint32'); ... % Acquisition clock %
-                obj.physiology_time_stamp(:,p) =  typecast(bytearray( 23: 34,p), 'uint32'); ... % Physiology time stamps, e.g. ecg, breating, etc. %
-                obj.number_of_samples(p) =        typecast(bytearray( 35: 36,p), 'uint16'); ... % Number of samples acquired %
-                obj.available_channels(p) =       typecast(bytearray( 37: 38,p), 'uint16'); ... % Available coils %
-                obj.active_channels(p) =          typecast(bytearray( 39: 40,p), 'uint16'); ... % Active coils on current acquisiton %
-                obj.channel_mask(:,p) =           typecast(bytearray( 41:168,p), 'uint64'); ... % Mask to indicate which channels are active. Support for 1024 channels %
-                obj.discard_pre(p) =              typecast(bytearray(169:170,p), 'uint16'); ... % Samples to be discarded at the beginning of acquisition %
-                obj.discard_post(p) =             typecast(bytearray(171:172,p), 'uint16'); ... % Samples to be discarded at the end of acquisition %
-                obj.center_sample(p) =            typecast(bytearray(173:174,p), 'uint16'); ... % Sample at the center of k-space %
-                obj.encoding_space_ref(p) =       typecast(bytearray(175:176,p), 'uint16'); ... % Reference to an encoding space, typically only one per acquisition %
-                obj.trajectory_dimensions(p) =    typecast(bytearray(177:178,p), 'uint16'); ... % Indicates the dimensionality of the trajectory vector (0 means no trajectory) %
-                obj.sample_time_us(p) =           typecast(bytearray(179:182,p), 'single'); ... % Time between samples in micro seconds, sampling BW %
-                obj.position(:,p) =               typecast(bytearray(183:194,p), 'single'); ... % Three-dimensional spatial offsets from isocenter %
-                obj.read_dir(:,p) =               typecast(bytearray(195:206,p), 'single'); ... % Directional cosines of the readout/frequency encoding %
-                obj.phase_dir(:,p) =              typecast(bytearray(207:218,p), 'single'); ... % Directional cosines of the phase encoding %
-                obj.slice_dir(:,p) =              typecast(bytearray(219:230,p), 'single'); ... % Directional cosines of the slice %
-                obj.patient_table_position(:,p) = typecast(bytearray(231:242,p), 'single'); ... % Patient table off-center %
-                obj.idx.kspace_encode_step_1(p) = typecast(bytearray(243:244,p), 'uint16'); ... % phase encoding line number %
-                obj.idx.kspace_encode_step_2(p) = typecast(bytearray(245:246,p), 'uint16'); ... % partition encodning number %
-                obj.idx.average(p) =              typecast(bytearray(247:248,p), 'uint16'); ... % signal average number %
-                obj.idx.slice(p) =                typecast(bytearray(249:250,p), 'uint16'); ... % imaging slice number %
-                obj.idx.contrast(p) =             typecast(bytearray(251:252,p), 'uint16'); ... % echo number in multi-echo %
-                obj.idx.phase(p) =                typecast(bytearray(253:254,p), 'uint16'); ... % cardiac phase number %
-                obj.idx.repetition(p) =           typecast(bytearray(255:256,p), 'uint16'); ... % dynamic number for dynamic scanning %
-                obj.idx.set(p) =                  typecast(bytearray(257:258,p), 'uint16'); ... % flow encoding set %
-                obj.idx.segment(p) =              typecast(bytearray(259:260,p), 'uint16'); ... % segment number for segmented acquisition %
-                obj.idx.user(:,p) =               typecast(bytearray(261:276,p), 'uint16'); ... % Free user parameters %
-                obj.user_int(:,p) =               typecast(bytearray(277:308,p), 'int32');  ... % Free user parameters %
-                obj.user_float(:,p) =             typecast(bytearray(309:340,p), 'single'); ... % Free user parameters %
-            end              
+            
+            obj.version =                  reshape(typecast(reshape(bytearray(  1:   2, :), 1, 2 *     N), 'uint16'),  1, N);  % First unsigned int indicates the version %
+            obj.flags =                    reshape(typecast(reshape(bytearray(  3:  10, :), 1, 8 *     N), 'uint64'),  1, N);  % bit field with flags %
+            obj.measurement_uid =          reshape(typecast(reshape(bytearray(  11: 14, :), 1, 4 *     N), 'uint32'),  1, N);  % Unique ID for the measurement %
+            obj.scan_counter =             reshape(typecast(reshape(bytearray(  15: 18, :), 1, 4 *     N), 'uint32'),  1, N);  % Current acquisition number in the measurement %
+            obj.acquisition_time_stamp =   reshape(typecast(reshape(bytearray(  19: 22, :), 1, 4 *     N), 'uint32'),  1, N);  % Acquisition clock %
+            obj.physiology_time_stamp =    reshape(typecast(reshape(bytearray(  23: 34, :), 1, 4 * 3 * N), 'uint32'),  3, N);  % Physiology time stamps, e.g. ecg, breating, etc. %
+            obj.number_of_samples =        reshape(typecast(reshape(bytearray(  35: 36, :), 1, 2 *     N), 'uint16'),  1, N);  % Number of samples acquired %
+            obj.available_channels =       reshape(typecast(reshape(bytearray(  37: 38, :), 1, 2 *     N), 'uint16'),  1, N);  % Available coils %
+            obj.active_channels =          reshape(typecast(reshape(bytearray(  39: 40, :), 1, 2 *     N), 'uint16'),  1, N);  % Active coils on current acquisiton %
+            obj.channel_mask =             reshape(typecast(reshape(bytearray(  41:168, :), 1, 8 *16 * N), 'uint64'), 16, N);  % Mask to indicate which channels are active. Support for 1024 channels %
+            obj.discard_pre =              reshape(typecast(reshape(bytearray( 169:170, :), 1, 2 *     N), 'uint16'),  1, N);  % Samples to be discarded at the beginning of acquisition %
+            obj.discard_post =             reshape(typecast(reshape(bytearray( 171:172, :), 1, 2 *     N), 'uint16'),  1, N);  % Samples to be discarded at the end of acquisition %
+            obj.center_sample =            reshape(typecast(reshape(bytearray( 173:174, :), 1, 2 *     N), 'uint16'),  1, N);  % Sample at the center of k-space %
+            obj.encoding_space_ref =       reshape(typecast(reshape(bytearray( 175:176, :), 1, 2 *     N), 'uint16'),  1, N);  % Reference to an encoding space, typically only one per acquisition %
+            obj.trajectory_dimensions =    reshape(typecast(reshape(bytearray( 177:178, :), 1, 2 *     N), 'uint16'),  1, N);  % Indicates the dimensionality of the trajectory vector (0 means no trajectory) %
+            obj.sample_time_us =           reshape(typecast(reshape(bytearray( 179:182, :), 1, 4 *     N), 'single'),  1, N);  % Time between samples in micro seconds, sampling BW %
+            obj.position =                 reshape(typecast(reshape(bytearray( 183:194, :), 1, 4 * 3 * N), 'single'),  3, N);  % Three-dimensional spatial offsets from isocenter %
+            obj.read_dir =                 reshape(typecast(reshape(bytearray( 195:206, :), 1, 4 * 3 * N), 'single'),  3, N);  % Directional cosines of the readout/frequency encoding %
+            obj.phase_dir =                reshape(typecast(reshape(bytearray( 207:218, :), 1, 4 * 3 * N), 'single'),  3, N);  % Directional cosines of the phase encoding %
+            obj.slice_dir =                reshape(typecast(reshape(bytearray( 219:230, :), 1, 4 * 3 * N), 'single'),  3, N);  % Directional cosines of the slice %
+            obj.patient_table_position =   reshape(typecast(reshape(bytearray( 231:242, :), 1, 4 * 3 * N), 'single'),  3, N);  % Patient table off-center %
+            obj.idx.kspace_encode_step_1 = reshape(typecast(reshape(bytearray( 243:244, :), 1, 2 *     N), 'uint16'),  1, N);  % phase encoding line number %
+            obj.idx.kspace_encode_step_2 = reshape(typecast(reshape(bytearray( 245:246, :), 1, 2 *     N), 'uint16'),  1, N);  % partition encodning number %
+            obj.idx.average =              reshape(typecast(reshape(bytearray( 247:248, :), 1, 2 *     N), 'uint16'),  1, N);  % signal average number %
+            obj.idx.slice =                reshape(typecast(reshape(bytearray( 249:250, :), 1, 2 *     N), 'uint16'),  1, N);  % imaging slice number %
+            obj.idx.contrast =             reshape(typecast(reshape(bytearray( 251:252, :), 1, 2 *     N), 'uint16'),  1, N);  % echo number in multi-echo %
+            obj.idx.phase =                reshape(typecast(reshape(bytearray( 253:254, :), 1, 2 *     N), 'uint16'),  1, N);  % cardiac phase number %
+            obj.idx.repetition =           reshape(typecast(reshape(bytearray( 255:256, :), 1, 2 *     N), 'uint16'),  1, N);  % dynamic number for dynamic scanning %
+            obj.idx.set =                  reshape(typecast(reshape(bytearray( 257:258, :), 1, 2 *     N), 'uint16'),  1, N);  % flow encoding set %
+            obj.idx.segment =              reshape(typecast(reshape(bytearray( 259:260, :), 1, 2 *     N), 'uint16'),  1, N);  % segment number for segmented acquisition %
+            obj.idx.user =                 reshape(typecast(reshape(bytearray( 261:276, :), 1, 2 * 8 * N), 'uint16'),  8, N);  % Free user parameters %
+            obj.user_int =                 reshape(typecast(reshape(bytearray( 277:308, :), 1, 4 * 8 * N),  'int32'),  8, N);  % Free user parameters %
+            obj.user_float =               reshape(typecast(reshape(bytearray( 309:340, :), 1, 4 * 8 * N), 'single'),  8, N);  % Free user parameters
         end
         
         function bytes = toBytes(obj)
             % Convert to an ISMRMRD AcquisitionHeader to a byte array
             % This conforms to the memory layout of the C-struct
-
+            
             N = obj.getNumber;
             bytes = zeros(340,N,'uint8');
             for p = 1:N
@@ -421,128 +420,128 @@ classdef AcquisitionHeader < handle
                 error('Size of flags is not correct.');
             end
             if ((size(obj.measurement_uid,1) ~= 1) || ...
-                (size(obj.measurement_uid,2) ~= N))
+                    (size(obj.measurement_uid,2) ~= N))
                 error('Size of measurement_uid is not correct.');
             end
             if ((size(obj.scan_counter,1) ~= 1) || ...
-                (size(obj.scan_counter,2) ~= N))
+                    (size(obj.scan_counter,2) ~= N))
                 error('Size of scan_counter is not correct.');
             end
             if ((size(obj.acquisition_time_stamp,1) ~= 1) || ...
-                (size(obj.acquisition_time_stamp,2) ~= N))
+                    (size(obj.acquisition_time_stamp,2) ~= N))
                 error('Size of acquisition_time_stamp is not correct.');
             end
             if ((size(obj.physiology_time_stamp,1) ~= 3) || ...
-                (size(obj.physiology_time_stamp,2) ~= N))
+                    (size(obj.physiology_time_stamp,2) ~= N))
                 error('Size of physiology_time_stamp is not correct.');
             end
             if ((size(obj.number_of_samples,1) ~= 1) || ...
-                (size(obj.number_of_samples,2) ~= N))
+                    (size(obj.number_of_samples,2) ~= N))
                 error('Size of number_of_samples is not correct.');
             end
             
             if ((size(obj.available_channels,1) ~= 1) || ...
-                (size(obj.available_channels,2) ~= N))
+                    (size(obj.available_channels,2) ~= N))
                 error('Size of available_channels is not correct.');
             end
             if ((size(obj.active_channels,1) ~= 1) || ...
-                (size(obj.active_channels,2) ~= N))
+                    (size(obj.active_channels,2) ~= N))
                 error('Size of active_channels is not correct.');
             end
             if ((size(obj.channel_mask,1) ~= 16) || ...
-                (size(obj.channel_mask,2) ~= N))    
+                    (size(obj.channel_mask,2) ~= N))
                 error('Size of channel_mask is not correct.');
             end
             if ((size(obj.discard_pre,1) ~= 1) || ...
-                (size(obj.discard_pre,2) ~= N))
+                    (size(obj.discard_pre,2) ~= N))
                 error('Size of discard_pre is not correct.');
             end
             if ((size(obj.discard_post,1) ~= 1) || ...
-                (size(obj.discard_post,2) ~= N))    
+                    (size(obj.discard_post,2) ~= N))
                 error('Size of discard_post is not correct.');
             end
             if ((size(obj.center_sample,1) ~= 1) || ...
-                (size(obj.center_sample,2) ~= N))
+                    (size(obj.center_sample,2) ~= N))
                 error('Size of center_sample is not correct.');
             end
             if ((size(obj.encoding_space_ref,1) ~= 1) || ...
-                (size(obj.encoding_space_ref,2) ~= N))    
+                    (size(obj.encoding_space_ref,2) ~= N))
                 error('Size of encoding_space_ref is not correct.');
             end
             if ((size(obj.trajectory_dimensions,1) ~= 1) || ...
-                (size(obj.trajectory_dimensions,2) ~= N))
+                    (size(obj.trajectory_dimensions,2) ~= N))
                 error('Size of trajectory_dimensions is not correct.');
             end
             if ((size(obj.sample_time_us,1) ~= 1) || ...
-                (size(obj.sample_time_us,2) ~= N))    
+                    (size(obj.sample_time_us,2) ~= N))
                 error('Size of sample_time_us is not correct.');
             end
             if ((size(obj.position,1) ~= 3) || ...
-                (size(obj.position,2) ~= N))    
+                    (size(obj.position,2) ~= N))
                 error('Size of position is not correct.');
             end
             if ((size(obj.read_dir,1) ~= 3) || ...
-                (size(obj.read_dir,2) ~= N))    
+                    (size(obj.read_dir,2) ~= N))
                 error('Size of read_dir is not correct.');
             end
             if ((size(obj.phase_dir,1) ~= 3) || ...
-                (size(obj.phase_dir,2) ~= N))    
+                    (size(obj.phase_dir,2) ~= N))
                 error('Size of phase_dir is not correct.');
             end
             if ((size(obj.slice_dir,1) ~= 3) || ...
-                (size(obj.slice_dir,2) ~= N))    
+                    (size(obj.slice_dir,2) ~= N))
                 error('Size of slice_dir is not correct.');
             end
             if ((size(obj.patient_table_position,1) ~= 3) || ...
-                (size(obj.patient_table_position,2) ~= N))    
+                    (size(obj.patient_table_position,2) ~= N))
                 error('Size of patient_table_position is not correct.');
             end
             if ((size(obj.idx.kspace_encode_step_1,1) ~= 1) || ...
-                (size(obj.idx.kspace_encode_step_1,2) ~= N))
+                    (size(obj.idx.kspace_encode_step_1,2) ~= N))
                 error('Size of kspace_encode_step_1 is not correct.');
             end
             if ((size(obj.idx.kspace_encode_step_2,1) ~= 1) || ...
-                (size(obj.idx.kspace_encode_step_2,2) ~= N))     
+                    (size(obj.idx.kspace_encode_step_2,2) ~= N))
                 error('Size of kspace_encode_step_2 is not correct.');
             end
             if ((size(obj.idx.average,1) ~= 1) || ...
-                (size(obj.idx.average,2) ~= N))    
+                    (size(obj.idx.average,2) ~= N))
                 error('Size of idx.average is not correct.');
             end
             if ((size(obj.idx.slice,1) ~= 1) || ...
-                (size(obj.idx.slice,2) ~= N))    
+                    (size(obj.idx.slice,2) ~= N))
                 error('Size of idx.slice is not correct.');
             end
             if ((size(obj.idx.contrast,1) ~= 1) || ...
-                (size(obj.idx.contrast,2) ~= N))    
+                    (size(obj.idx.contrast,2) ~= N))
                 error('Size of idx.contrast is not correct.');
             end
             if ((size(obj.idx.phase,1) ~= 1) || ...
-                (size(obj.idx.phase,2) ~= N))    
+                    (size(obj.idx.phase,2) ~= N))
                 error('Size of idx.phase is not correct.');
             end
             if ((size(obj.idx.repetition,1) ~= 1) || ...
-                (size(obj.idx.repetition,2) ~= N))    
+                    (size(obj.idx.repetition,2) ~= N))
                 error('Size of idx.repetition is not correct.');
             end
             if ((size(obj.idx.set,1) ~= 1) || ...
-                (size(obj.idx.set,2) ~= N))    
+                    (size(obj.idx.set,2) ~= N))
                 error('Size of idx.set is not correct.');
             end
             if ((size(obj.idx.segment,1) ~= 1) || ...
-                (size(obj.idx.segment,2) ~= N))    
+                    (size(obj.idx.segment,2) ~= N))
                 error('Size of idx.segment is not correct.');
             end
             if ((size(obj.idx.user,1) ~= 8) || ...
-                (size(obj.idx.user,2) ~= N))    
+                    (size(obj.idx.user,2) ~= N))
                 error('Size of idx.user is not correct.');
             end
             if ((size(obj.user_int,1) ~= 8) || ...
-                (size(obj.user_int,2) ~= N))    
+                    (size(obj.user_int,2) ~= N))
                 error('Size of user_int is not correct.');
             end
             if ((size(obj.user_float,1) ~= 8) || ...
-                (size(obj.user_float,2) ~= N))    
+                    (size(obj.user_float,2) ~= N))
                 error('Size of user_float is not correct.');
             end
             
@@ -580,7 +579,7 @@ classdef AcquisitionHeader < handle
             obj.idx.user = uint16(obj.idx.user);
             obj.user_int = int32(obj.user_int);
             obj.user_float = single(obj.user_float);
- 
+            
         end
         
         function ret = flagIsSet(obj, flag, range)
@@ -594,7 +593,7 @@ classdef AcquisitionHeader < handle
             elseif (flag>0)
                 b = uint64(flag);
             else
-                error('Flag is of the wrong type.'); 
+                error('Flag is of the wrong type.');
             end
             bitmask = bitshift(uint64(1),(b-1));
             ret = zeros(size(range));
@@ -612,10 +611,10 @@ classdef AcquisitionHeader < handle
             elseif (flag>0)
                 b = uint64(flag);
             else
-                error('Flag is of the wrong type.'); 
+                error('Flag is of the wrong type.');
             end
             bitmask = bitshift(uint64(1),(b-1));
-
+            
             alreadyset = obj.flagIsSet(flag,range);
             for p = 1:length(range)
                 if ~alreadyset(p)
@@ -634,7 +633,7 @@ classdef AcquisitionHeader < handle
             elseif (flag>0)
                 b = uint64(flag);
             else
-                error('Flag is of the wrong type.'); 
+                error('Flag is of the wrong type.');
             end
             bitmask = bitshift(uint64(1),(b-1));
             
